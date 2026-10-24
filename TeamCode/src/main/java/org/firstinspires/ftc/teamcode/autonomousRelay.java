@@ -1,8 +1,11 @@
 package org.firstinspires.ftc.teamcode;
 
+import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
+import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.DcMotor;
 
 public class autonomousRelay {
+    private static LinearOpMode imu;
 
     // Circumference = 1.890
     // Ticks per revolution = 2000
@@ -16,7 +19,7 @@ public class autonomousRelay {
 
         while (distanceTravelled(ticks) < inchesForward) {
             ticks = Robot.backleft.getCurrentPosition();
-            double speed = Math.pow((inchesForward - distanceTravelled(ticks)) / 16.0, (.2));
+            double speed = Math.pow((inchesForward - distanceTravelled(ticks)) / 16.0, (0.27352297593));
             Robot.drive(speed, speed, speed, speed);
         }
 
@@ -31,61 +34,48 @@ public class autonomousRelay {
 
         while (distanceTravelled(ticks) < inchesToTheRight) {
             ticks = Robot.backleft.getCurrentPosition();
-            double speed = Math.pow((inchesToTheRight - distanceTravelled(ticks)) / 16.0, (.2));
+            double speed = Math.pow((inchesToTheRight - distanceTravelled(ticks)) / 16.0, (0.27352297593));
             Robot.drive(speed, speed, speed, speed);
         }
 
         Robot.drive(0, 0, 0, 0);
     }
+    public void turnDegrees(LinearOpMode opMode, double degrees, IMUControl imu){
+        double currentHeading = imu.getHeading();
+        double startHeading = currentHeading;
 
-    public static void turnRightDeg(double turnToTheRight) {
-        double ticks = 0;
-        Robot.backleft.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        Robot.backleft.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        while (opMode.opModeIsActive() && Math.abs(startHeading - currentHeading) < degrees) {
+            currentHeading = imu.getHeading();
+            double power = 0.5; // Set power for turning
+
+            Robot.drive(power, power, -power, -power);
 
 
-
-            ticks = Robot.backleft.getCurrentPosition();
-            double speed = 1.2 * Math.pow((turnToTheRight - distanceTravelled(ticks)) / 16.0, (0.27352297593));
-            Robot.drive(speed, -speed, -speed, speed);
-
-        Robot.drive(0, 0, 0, 0);
+        }
     }
-
-
-    public static void turnLeftDeg(double turnToTheLeft) {
-        double ticks = 0;
-        Robot.backleft.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        Robot.backleft.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-
-
-
-            ticks = Robot.backleft.getCurrentPosition();
-            double speed = 1.2 * Math.pow((turnToTheLeft - distanceTravelled(ticks)) / 16.0, (0.27352297593));
-            Robot.drive(-speed, speed, speed, -speed);
-
-
-        Robot.drive(0, 0, 0, 0);
-    }
-
 
     public static double distanceTravelled(double ticks) {
 
-        return ticks / 2000.0 * 1.89;         // inches
+        return ticks / 2000.0 * 1.89;
     }
 
-    public static void main(String[] args) {
+    @Autonomous(name="Autonomous Relay", group="Autonomous")
+    public class AutonomousRelayOpMode extends LinearOpMode {
+        @Override
+        public void runOpMode() {
+            IMUControl imu = new IMUControl(hardwareMap); // Initialize IMU
+            autonomousRelay relay = new autonomousRelay();
 
-        while(true) {
-            autonomousRelay.goForwardIn(9);
-            autonomousRelay.goRightIn(9);
-            autonomousRelay.goForwardIn(-9);
-            autonomousRelay.goRightIn(-9);
-            autonomousRelay.turnRightDeg(90);
-            autonomousRelay.turnLeftDeg(90);
+            waitForStart();
 
+            if (opModeIsActive()) {
+                relay.goForwardIn(9);
+                relay.goRightIn(9);
+                relay.goForwardIn(-9);
+                relay.goRightIn(-9);
+                relay.turnDegrees(this, 90, imu);
+            }
         }
-
     }
 
 
